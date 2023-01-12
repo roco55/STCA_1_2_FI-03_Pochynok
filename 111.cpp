@@ -2,7 +2,7 @@
 using namespace std;
 #include <string>
 #include <bits/stdc++.h>
-#define SIZEBIT 2048
+#define SIZEBIT 4096
 class LongInt{
 bool arr[SIZEBIT];
 
@@ -32,9 +32,10 @@ static LongInt  shiftingL(LongInt x, int y){
 
 
 //shifting all array to the right
-static LongInt shiftingR(LongInt x){
-    for(int i=SIZEBIT-1; i>1; i--){
-        x.arr[i]=x.arr[i-1];
+static LongInt shiftingR(LongInt x, int y){
+
+    for(int i=0; i<SIZEBIT-y; ++i){
+        x.arr[SIZEBIT-1-i]=x.arr[SIZEBIT-1-y-i];
     }
     return x;
 };
@@ -219,16 +220,16 @@ static LongInt gcd ( const LongInt& x,  const LongInt& y){
     b=y;
     d.arr[SIZEBIT-1] = true;
     while((a.arr[SIZEBIT-1] == false) && (b.arr[SIZEBIT-1] == false)){
-        a = shiftingR(a);
-        b = shiftingR(b);
+        a = shiftingR(a,1);
+        b = shiftingR(b,1);
         d = shiftingL(d,1);
     }
     while(a.arr[SIZEBIT-1] == false){
-        shiftingR(a);
+        a = shiftingR(a,1);
     }
     while(SIZEBIT - b.shrink() > 0){
         while(b.arr[SIZEBIT-1] == false){
-            b = shiftingR(b);
+            b = shiftingR(b,1);
         }
         if(a.comparison(b)){
             LongInt c = a;
@@ -254,7 +255,7 @@ static LongInt lcm (const LongInt& x, const LongInt& y){
 
 
 
-static LongInt modul( LongInt& x, const LongInt& m){
+static LongInt modul( LongInt& x, LongInt& m){
     LongInt d, mul,res;
     d = div(x,m);
     mul = d*m;
@@ -263,7 +264,7 @@ static LongInt modul( LongInt& x, const LongInt& m){
     return res;
 }
 
-static LongInt pm (const LongInt& x,  const LongInt& y, const LongInt& m){
+static LongInt pm (const LongInt& x,  const LongInt& y, LongInt& m){
     LongInt add, res;
     add = x+y;
     res = modul(add, m);
@@ -283,6 +284,12 @@ static LongInt mulm (LongInt& x, LongInt& y, LongInt& m){
     return modul(mul,m);
 }
 
+static LongInt divm (LongInt x, LongInt y, LongInt m){
+    LongInt res;
+    res = div(x,y);
+    return modul(res,m);
+}
+
 static LongInt sqm(LongInt& x, LongInt& m){
     LongInt res;
     LongInt two;
@@ -297,7 +304,7 @@ static  LongInt powm(LongInt& x, LongInt& y, LongInt& m){
  return modul(pow,m);
 }
 
-static LongInt root(  LongInt& x, LongInt& m){
+static LongInt root(LongInt& x, LongInt& m){
     LongInt a = modul(x,m);
     LongInt root;
     root.arr[SIZEBIT-1]= true;
@@ -309,7 +316,7 @@ static LongInt root(  LongInt& x, LongInt& m){
     for(int loop = 0; loop <i; loop ++){
         k=a;
         for(int j=0; j<i*2-2*(loop+1);j++){
-        k = shiftingR(k);
+        k = shiftingR(k,1);
         }
         for(int s=(SIZEBIT-3);s>0;s--){
             k.arr[s] = false;
@@ -333,10 +340,127 @@ static LongInt root(  LongInt& x, LongInt& m){
         }
     }
     for(int o = 0; o<2; o++){
-        root = shiftingR(root);
+        root = shiftingR(root,1);
     }
 
     return root;
+}
+
+
+static LongInt Barett(LongInt x, const LongInt m){
+    LongInt c;
+    c.arr[SIZEBIT-1] = true;
+    int n = (SIZEBIT - m.shrink());
+    LongInt ksi;
+    ksi = shiftingL(c,2*n);
+    LongInt tro = m;
+    ksi = div(ksi,tro);
+    LongInt one = x;
+    LongInt q;  
+    LongInt r;
+    q = shiftingR(one,n-1);
+    q = q * ksi;
+    q = shiftingR(one,n+1);
+    r = one-(q*tro);
+    while(tro.comparison(r) == false){
+        r = r - tro;
+    }
+    return r;
+}
+
+
+
+static LongInt LMPBarret(LongInt& x, LongInt& y, LongInt& m){
+    LongInt c;
+    LongInt a;
+    LongInt mod;
+    mod = m;
+    a = x;
+    c.arr[SIZEBIT-1] = true;
+    int n;
+    n = SIZEBIT - mod.shrink();
+    int s = SIZEBIT - y.shrink();
+    for(int i = 0; i<s; ++i)
+    {
+        if(y.arr[SIZEBIT-1-i] == true){
+            c = Barett((mulm(c,a,mod)), mod);
+        }
+        a = Barett((mulm(a,a,mod)), mod);
+    } 
+    
+  
+    return c;
+}
+
+
+bool modcomp(LongInt& x){
+    bool res = true;
+    for(int i = 0; i<SIZEBIT; i++){
+        if(this->arr[i] == x.arr[i]){
+            res = true;
+        }else{
+            res = false;
+            break;
+        }
+    }
+    return res;
+}
+
+
+static LongInt square_by_prime_modul(LongInt& x, LongInt& m){
+    LongInt one,two,three,five,four,eight;
+    one.arr[SIZEBIT-1] = 1;
+    three.arr[SIZEBIT-1] = 1;
+    three.arr[SIZEBIT-2] = 1;
+    five.arr[SIZEBIT-1] = 1;
+    five.arr[SIZEBIT-3] = 1;
+    four.arr[SIZEBIT-3] = 1;
+    eight.arr[SIZEBIT-4] = 1;
+    two.arr[SIZEBIT-2]=1;
+    LongInt k;
+    LongInt res;
+    LongInt res1;
+    LongInt res2;
+
+    
+
+    if(modul(m,four).modcomp(three) == 1){
+        LongInt b;
+        b = power(x,shiftingR((m-one),1));
+        if(modul(b,m).modcomp(one)==1){
+            k = shiftingR(m-three, 2);
+            res1 = power(x,k+one);
+            res1 = modul(res1,m);
+            res2 = m - res1;
+            }
+
+
+        if(power(x,shiftingR((m-one),1)).modcomp(one)==1){
+            k = shiftingR(m-five, 3);
+            LongInt 
+            res = power(x,(two*k+one));
+            res = modul(res,m);
+            if(res.modcomp(one)== 1){
+                res1 = power(x,k+one);
+                res2 = m - res1;
+            }else{
+                res1 = power(x,k+one)*power(two,two*k+one);
+                res2 = m - res1;
+            }
+        }else{
+            cout<<"Solutions don`t exist"; 
+        }
+    // }else if(modul(m,eight).modcomp(one)==1){
+    //     LomgInt a;
+    //     a=one;
+    //     while(power(a,shiftingR(m-one)).modcomp(one) != one){
+    //         a = a + one;
+    //     }
+    }else{
+        cout<<"modul is not prime";
+    }
+    
+    return res1;
 }
 
 
@@ -345,7 +469,9 @@ static LongInt root(  LongInt& x, LongInt& m){
 
 
 
- 
+
+
+    
 //OUTPUT
 //OUTPUT
 //OUTPUT
@@ -476,23 +602,25 @@ std::string hb(const std::string& hex)
 
 int main(){
 
-    string num1, num2, num3;
-    LongInt num11, num21, mod;
-    num1 = "D4D2110984907B5625309D956521BAB4157B8B1ECE04043249A3D379AC112E5B9AF44E721E148D88A942744CF56A06B92D28A0DB950FE4CED2B41A0BD38BCE7D0BE1055CF5DE38F2A588C2C9A79A75011058C320A7B661C6CE1C36C7D870758307E5D2CF07D9B6E8D529779B6B2910DD17B6766A7EFEE215A98CAC300F2827DB";
-    num2 = "3A7EF2554E8940FA9B93B2A5E822CC7BB262F4A14159E4318CAE3ABF5AEB1022EC6D01DEFAB48B528868679D649B445A753684C13F6C3ADBAB059D635A2882090FC166EA9F0AAACD16A062149E4A0952F7FAAB14A0E9D3CB0BE9200DBD3B0342496421826919148E617AF1DB66978B1FCD28F8408506B79979CCBCC7F7E5FDE7";
-    num3 = "AA";
+    string num1, num2, num3,num4;
+    LongInt num11, num21, mod, pow2;
+    num1 = "2";   
+    num2 = "13";
+    num3 = "17";
+    num4 = "2";
+    pow2.converting(hb(num4));
     num11.converting(hb(num1));
     num21.converting(hb(num2));
     mod.converting(hb(num3));
-    cout<<"NUM1\n";
+    cout<<"A\n";
     num11.print();
-    cout<<"\n";
-    cout<<"NUM2\n";
+    cout<<"\n\n";
+    cout<<"B\n";
     num21.print();
-    cout<<"\n";
-    cout<<"NUM3\n";
+    cout<<"\n\n";
+    cout<<"MODUL\n";
     mod.print();
-    cout<<"\n";
+    cout<<"\n\n";
     string a,b,c,d,e;
     string a1,b1,c1,d1,e1;
     a="010F51035ED319BC50C0C4503B4D44872FC7DE7FC00F5DE863D6520E3906FC3E7E8761505118C918DB31AADBEA5A054B13A25F259CD47C1FAA7DB9B76F2DB450861BA26C4794E8E3BFBC2924DE45E47E5408536E3548A03591DA0556D595AB78C55149F45170F2CB7736A46976D1C09BFCE4DF6EAB040599AF235968F8070E25C2";
@@ -504,89 +632,56 @@ int main(){
     d="0D4D2110984907B5625309D956521BAB4157B8B1ECE04043249A3D379AC112E5B9AF44E721E148D88A942744CF56A06B92D28A0DB950FE4CED2B41A0BD38BCE7D0BE1055CF5DE38F2A588C2C9A79A75011058C320A7B661C6CE1C36C7D870758307E5D2CF07D9B6E8D529779B6B2910DD17B6766A7EFEE215A98CAC300F2827DB";
     d1 = "0D4D2110984907B5625309D956521BAB4157B8B1ECE04043249A3D379AC112E5B9AF44E721E148D88A942744CF56A06B92D28A0DB950FE4CED2B41A0BD38BCE7D0BE1055CF5DE38F2A588C2C9A79A75011058C320A7B661C6CE1C36C7D870758307E5D2CF07D9B6E8D529779B6B2910DD17B6766A7EFEE215A98CAC300F2827DB";
   
-    /*
-    LongInt res_pl = num11 + num21;
-    cout<<"PLUS\n";
-    res_pl.print();
-    cout<<"\n";
-    if(a == a1){
-        cout<<"test passed\n";
-    }
-    LongInt res_mi = num11 - num21; 
-    cout<<"MINUS\n";
-    res_mi.print();
-    cout<<"\n";
-    if(b == b1){
-        cout<<"test passed\n";
-    }
-    
-
-    LongInt res_mul = num11 * num21;
-    cout<<"MUL\n";
-    res_mul.print();
-    cout<<"\n";
-    if(c == c1){
-        cout<<"test passed\n";
-    }
-    cout<<"\n";
-
-    LongInt res_pow = LongInt::power(num11,num21);
-    cout<<"POW\n";
-    res_pow.print();
-    cout<<"\n";
-    
-
-    LongInt res_div = LongInt::div((num11*num21),num21);
-    cout<<"DIV\n";
-    res_div.print();
-    cout<<"\n";
-     if(d == d1){
-        cout<<"test passed\n";
-    }
-    cout<<"\n";
-  */
-    LongInt res_gcd = LongInt::gcd(num11,num21);
-    cout<<"GCD is\n";
-    res_gcd.print();
-    cout<<"\n";
-
-    LongInt res_lcm = LongInt::lcm(num11,num21);
-    cout<<"LCM is\n";
-    res_lcm.print();
-    cout<<"\n";
-
-    LongInt res_pm = LongInt::pm(num11,num21, mod);
-    cout<<"addition by mod is\n";
-    res_pm.print();
-    cout<<"\n";
-
-    LongInt res_mm = LongInt::mm(num11,num21, mod);
-    cout<<"minus by mod is\n";
-    res_mm.print();
-    cout<<"\n";
-
-    LongInt res_mulm = LongInt::mulm(num11,num21, mod);
-    cout<<"multiplication by mod is\n";
-    res_mulm.print();
-    cout<<"\n";
-
-    LongInt res_sqm = LongInt::sqm(num11, mod);
-    cout<<"x^2 by mod is\n";
-    res_sqm.print();
-    cout<<"\n";
-
-    LongInt res_powm = LongInt::powm(num11,num21, mod);
-    cout<<"power by mod is\n";
-    res_powm.print();
-    cout<<"\n";
-    
-    LongInt res_root = LongInt::root(num11,mod);
-    cout<<"root of num11 is\n";
-    res_root.print();
-    cout<<"\n";
-  
 
     
-   
+    // cout<<"GCD\n";
+    // LongInt::gcd(num11,num21).print();
+    // cout<<"\n";
+    // cout<<"01\n\n";
+
+    // cout<<"LCM\n";
+    // LongInt::lcm(num11,num21).print();
+    // cout<<"\n";
+    // cout<<"085d620e895108fb2221135d9f2b0\n\n";
+
+    // cout<<"( A + B ) mod C\n";
+    // LongInt::pm(num11,num21,mod).print();
+    // cout<<"\n";
+    // cout<<"01312ba7fbc371fc5ded6f\n\n";
+
+    // cout<<"( A - B ) mod C\n";
+    // LongInt::mm(num11,num21,mod).print();
+    // cout<<"\n";
+    // cout<<"01312ba7fbc371fc5c64cf\n\n";
+
+    // cout<<"( A * B ) mod C\n";
+    // LongInt::mulm(num11,num21,mod).print();
+    // cout<<"\n";
+    // cout<<"061fc395422ce07fa17380\n\n";
+
+    // cout<<"( A ^ 2 ) mod C\n";
+    // LongInt::powm(num11,pow2,mod).print();
+    // cout<<"\n";
+    // cout<<"0aa34eed1be227854c8301\n\n";
+
+    // cout<<"A mod C\n";
+    // LongInt::modul(num11,mod).print();
+    // cout<<"\n";
+
+    // cout<<"A mod C (Barret)\n";
+    // LongInt::Barett(num11,mod).print();
+    // cout<<"\n\n";
+
+    
+    // cout<<"( A ^ B ) mod C (Barret)\n";
+    // LongInt::LMPBarret(num11,num21,mod).print();
+    // cout<<"\n";
+    // cout<<"0adf0df3c6131109e338f1\n\n";
+
+    cout<<"root x mod C \n";
+    LongInt::square_by_prime_modul(num11,mod).print();
+    cout<<"\n";
+
+    
+
 }
-
